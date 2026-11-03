@@ -167,17 +167,29 @@
 </div>
 
                 <div class="formatting-toolbar">
-                    <button title="Bold"><b>B</b></button>
-                    <button title="Italic"><i>I</i></button>
-                    <button title="Underline"><u>U</u></button>
-                    <button title="Bullet list">☷</button>
-                </div>
+    <button type="button" data-command="bold" title="Bold">
+        <b>B</b>
+    </button>
 
-                <textarea
-                    id="noteContent"
-                    class="note-content"
-                    placeholder="Start writing your thoughts here..."
-                ></textarea>
+    <button type="button" data-command="italic" title="Italic">
+        <i>I</i>
+    </button>
+
+    <button type="button" data-command="underline" title="Underline">
+        <u>U</u>
+    </button>
+
+    <button type="button" data-command="insertUnorderedList" title="Bullet list">
+        ☷
+    </button>
+</div>
+
+<div
+    id="noteContent"
+    class="note-content"
+    contenteditable="true"
+    data-placeholder="Start writing your thoughts here..."
+></div>
 
             </div>
 

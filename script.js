@@ -20,6 +20,10 @@ const pinBtn = document.getElementById("pinBtn");
 const favoriteBtn = document.getElementById("favoriteBtn");
 const deleteBtn = document.getElementById("deleteBtn");
 
+const formatButtons = document.querySelectorAll(
+    ".formatting-toolbar button"
+);
+
 const filterButtons = document.querySelectorAll(".filter-btn");
 const categoryLinks = document.querySelectorAll(".category-link");
 const workspaceLinks = document.querySelectorAll(".workspace-link");
@@ -30,7 +34,6 @@ const notesPanel = document.querySelector(".notes-panel");
 const editorPanel = document.querySelector(".editor-panel");
 const totalNotes = document.getElementById("totalNotes");
 
-// Find the theme selector in the Settings page
 const themeSelect =
     document.getElementById("themeSelect") ||
     settingsPage?.querySelector("select");
@@ -40,46 +43,49 @@ const themeSelect =
 // 2. STORE NOTES
 // ==========================================
 
-let notes = JSON.parse(localStorage.getItem("notes")) || [
+// Only create sample notes when there is no saved data.
+// An intentionally empty notes array stays empty.
 
-    {
-        id: 1,
-        title: "Welcome to NoteSpace",
-        content: "Your thoughts deserve a beautiful space. Start writing your ideas here!",
-        category: "Personal",
-        pinned: false,
-        favorite: false,
-        updatedAt: new Date().toISOString()
-    },
+const savedNotes = localStorage.getItem("notes");
 
-    {
-        id: 2,
-        title: "My Daily Goals",
-        content: "Things I want to accomplish today...",
-        category: "Personal",
-        pinned: false,
-        favorite: false,
-        updatedAt: new Date().toISOString()
-    },
-
-    {
-        id: 3,
-        title: "Project Ideas",
-        content: "Some interesting ideas for future projects...",
-        category: "Ideas",
-        pinned: false,
-        favorite: false,
-        updatedAt: new Date().toISOString()
-    }
-
-];
+let notes = savedNotes !== null
+    ? JSON.parse(savedNotes)
+    : [
+        {
+            id: 1,
+            title: "Welcome to NoteSpace",
+            content: "Your thoughts deserve a beautiful space. Start writing your ideas here!",
+            category: "Personal",
+            pinned: false,
+            favorite: false,
+            updatedAt: new Date().toISOString()
+        },
+        {
+            id: 2,
+            title: "My Daily Goals",
+            content: "Things I want to accomplish today...",
+            category: "Personal",
+            pinned: false,
+            favorite: false,
+            updatedAt: new Date().toISOString()
+        },
+        {
+            id: 3,
+            title: "Project Ideas",
+            content: "Some interesting ideas for future projects...",
+            category: "Ideas",
+            pinned: false,
+            favorite: false,
+            updatedAt: new Date().toISOString()
+        }
+    ];
 
 let activeNoteId = notes.length > 0 ? notes[0].id : null;
 
 let currentFilter = "All";
 
 
-// Give older notes default values where necessary
+// Give older notes default values
 
 notes.forEach(note => {
 
@@ -101,7 +107,94 @@ notes.forEach(note => {
 
 
 // ==========================================
-// 3. COUNT NOTES WITH CONTENT
+// 3. HELPER FUNCTIONS FOR NOTE CONTENT
+// ==========================================
+
+// Get ordinary text from the rich-text editor.
+// This is useful for searching and counting words.
+
+function getPlainText(html) {
+
+    const temporaryElement = document.createElement("div");
+
+    temporaryElement.innerHTML = html;
+
+    return temporaryElement.textContent || "";
+
+}
+
+
+// Clean saved HTML before displaying it.
+// Only basic formatting tags are allowed.
+
+function cleanNoteHTML(html) {
+
+    const template = document.createElement("template");
+
+    template.innerHTML = html;
+
+    const allowedTags = [
+        "B", "STRONG", "I", "EM", "U",
+        "UL", "OL", "LI", "P", "BR", "DIV"
+    ];
+
+    const dangerousTags = [
+        "SCRIPT", "STYLE", "IFRAME",
+        "OBJECT", "EMBED"
+    ];
+
+    template.content.querySelectorAll("*").forEach(element => {
+
+        if (dangerousTags.includes(element.tagName)) {
+            element.remove();
+            return;
+        }
+
+        if (!allowedTags.includes(element.tagName)) {
+
+            element.replaceWith(
+                document.createTextNode(element.textContent)
+            );
+
+            return;
+
+        }
+
+        // Remove attributes such as onclick and style.
+        Array.from(element.attributes).forEach(attribute => {
+            element.removeAttribute(attribute.name);
+        });
+
+    });
+
+    return template.innerHTML;
+
+}
+
+
+// Load content safely.
+// Old notes containing ordinary text are preserved.
+
+function displayNoteContent(content) {
+
+    const looksLikeRichText =
+        /<\/?(b|strong|i|em|u|ul|ol|li|p|br|div)(\s|>|\/)/i.test(content);
+
+    if (looksLikeRichText) {
+
+        noteContent.innerHTML = cleanNoteHTML(content);
+
+    } else {
+
+        noteContent.textContent = content;
+
+    }
+
+}
+
+
+// ==========================================
+// 4. COUNT NOTES
 // ==========================================
 
 function updateTotalNotes() {
@@ -109,8 +202,8 @@ function updateTotalNotes() {
     const completedNotes = notes.filter(note => {
 
         return (
-            (note.title || "").trim() !== "" ||
-            (note.content || "").trim() !== ""
+            note.title.trim() !== "" ||
+            getPlainText(note.content).trim() !== ""
         );
 
     });
@@ -123,7 +216,7 @@ function updateTotalNotes() {
 
 
 // ==========================================
-// 4. SAVE NOTES
+// 5. SAVE NOTES
 // ==========================================
 
 function saveNotes() {
@@ -138,45 +231,34 @@ function saveNotes() {
 
 }
 
-
-// Save any updates made to older notes
-
 saveNotes();
 
 
 // ==========================================
-// 5. LIGHT AND DARK MODE
+// 6. LIGHT AND DARK MODE
 // ==========================================
 
 function applyTheme(theme) {
 
     if (theme === "dark") {
-
         document.body.classList.add("dark-mode");
-
     } else {
-
         document.body.classList.remove("dark-mode");
-
     }
 
     if (themeSelect) {
-        themeSelect.value = theme === "dark" ? "Dark Mode" : "Light Mode";
+        themeSelect.value =
+            theme === "dark" ? "Dark Mode" : "Light Mode";
     }
 
     localStorage.setItem("noteSpaceTheme", theme);
 
 }
 
-
-// Load the previously selected theme
-
 const savedTheme = localStorage.getItem("noteSpaceTheme") || "light";
 
 applyTheme(savedTheme);
 
-
-// Respond when the user changes the theme
 
 if (themeSelect) {
 
@@ -194,7 +276,7 @@ if (themeSelect) {
 
 
 // ==========================================
-// 6. NAVIGATION BETWEEN NOTES AND SETTINGS
+// 7. NAVIGATION BETWEEN NOTES AND SETTINGS
 // ==========================================
 
 function showNotesWorkspace() {
@@ -235,8 +317,6 @@ function showSettingsPage() {
 }
 
 
-// Settings button
-
 settingsBtn.addEventListener("click", event => {
 
     event.preventDefault();
@@ -245,8 +325,6 @@ settingsBtn.addEventListener("click", event => {
 
 });
 
-
-// Workspace navigation
 
 workspaceLinks.forEach(link => {
 
@@ -268,7 +346,7 @@ workspaceLinks.forEach(link => {
 
 
 // ==========================================
-// 7. UPDATE NAVIGATION APPEARANCE
+// 8. UPDATE NAVIGATION APPEARANCE
 // ==========================================
 
 function updateNavigation() {
@@ -306,7 +384,7 @@ function updateNavigation() {
 
 
 // ==========================================
-// 8. DISPLAY NOTES
+// 9. DISPLAY NOTES
 // ==========================================
 
 function displayNotes() {
@@ -317,23 +395,20 @@ function displayNotes() {
 
     let filteredNotes = notes.filter(note => {
 
+        const plainContent = getPlainText(note.content);
+
         const matchesSearch =
-            (note.title || "").toLowerCase().includes(searchTerm) ||
-            (note.content || "").toLowerCase().includes(searchTerm);
+            note.title.toLowerCase().includes(searchTerm) ||
+            plainContent.toLowerCase().includes(searchTerm);
 
         let matchesFilter = true;
 
-
         if (currentFilter === "Starred") {
-
             matchesFilter = note.favorite;
-
         }
 
         else if (currentFilter === "Pinned") {
-
             matchesFilter = note.pinned;
-
         }
 
         else if (currentFilter === "Recent") {
@@ -349,9 +424,7 @@ function displayNotes() {
         else if (
             ["Work", "Study", "Ideas", "Personal"].includes(currentFilter)
         ) {
-
             matchesFilter = note.category === currentFilter;
-
         }
 
         return matchesSearch && matchesFilter;
@@ -359,7 +432,7 @@ function displayNotes() {
     });
 
 
-    // Show pinned notes first
+    // Pinned notes appear first
 
     filteredNotes.sort((a, b) => {
 
@@ -371,8 +444,6 @@ function displayNotes() {
 
     });
 
-
-    // Show a message if no notes are found
 
     if (filteredNotes.length === 0) {
 
@@ -406,7 +477,8 @@ function displayNotes() {
 
         const content = document.createElement("p");
 
-        content.textContent = note.content || "No content yet...";
+        content.textContent =
+            getPlainText(note.content) || "No content yet...";
 
 
         const date = document.createElement("small");
@@ -440,7 +512,7 @@ function displayNotes() {
 
 
 // ==========================================
-// 9. LOAD A NOTE INTO THE EDITOR
+// 10. LOAD A NOTE INTO THE EDITOR
 // ==========================================
 
 function loadNote() {
@@ -453,7 +525,9 @@ function loadNote() {
     if (!activeNote) {
 
         noteTitle.value = "";
-        noteContent.value = "";
+
+        noteContent.innerHTML = "";
+
         noteCategory.value = "Personal";
 
         noteDate.textContent = "Today";
@@ -461,6 +535,7 @@ function loadNote() {
         pinBtn.style.color = "#77798a";
 
         favoriteBtn.textContent = "☆";
+
         favoriteBtn.style.color = "#77798a";
 
         updateWordCount();
@@ -472,7 +547,7 @@ function loadNote() {
 
     noteTitle.value = activeNote.title;
 
-    noteContent.value = activeNote.content;
+    displayNoteContent(activeNote.content);
 
     noteCategory.value = activeNote.category || "Personal";
 
@@ -503,7 +578,7 @@ function loadNote() {
 
 
 // ==========================================
-// 10. CREATE A NEW NOTE
+// 11. CREATE A NEW NOTE
 // ==========================================
 
 newNoteBtn.addEventListener("click", () => {
@@ -549,7 +624,7 @@ newNoteBtn.addEventListener("click", () => {
 
 
 // ==========================================
-// 11. AUTOMATICALLY SAVE CHANGES
+// 12. AUTOMATICALLY SAVE CHANGES
 // ==========================================
 
 function updateNote() {
@@ -558,13 +633,14 @@ function updateNote() {
         note => note.id === activeNoteId
     );
 
-
     if (!activeNote) return;
 
 
     activeNote.title = noteTitle.value;
 
-    activeNote.content = noteContent.value;
+    // Save the formatting as HTML
+
+    activeNote.content = noteContent.innerHTML;
 
     activeNote.category = noteCategory.value;
 
@@ -593,18 +669,16 @@ noteCategory.addEventListener("change", updateNote);
 
 
 // ==========================================
-// 12. DELETE A NOTE
+// 13. DELETE A NOTE
 // ==========================================
 
 deleteBtn.addEventListener("click", () => {
 
     if (!activeNoteId) return;
 
-
     const confirmDelete = confirm(
         "Are you sure you want to delete this note?"
     );
-
 
     if (!confirmDelete) return;
 
@@ -629,7 +703,7 @@ deleteBtn.addEventListener("click", () => {
 
 
 // ==========================================
-// 13. PIN A NOTE
+// 14. PIN A NOTE
 // ==========================================
 
 pinBtn.addEventListener("click", () => {
@@ -637,7 +711,6 @@ pinBtn.addEventListener("click", () => {
     const activeNote = notes.find(
         note => note.id === activeNoteId
     );
-
 
     if (!activeNote) return;
 
@@ -654,7 +727,7 @@ pinBtn.addEventListener("click", () => {
 
 
 // ==========================================
-// 14. FAVOURITE A NOTE
+// 15. FAVOURITE A NOTE
 // ==========================================
 
 favoriteBtn.addEventListener("click", () => {
@@ -662,7 +735,6 @@ favoriteBtn.addEventListener("click", () => {
     const activeNote = notes.find(
         note => note.id === activeNoteId
     );
-
 
     if (!activeNote) return;
 
@@ -679,14 +751,14 @@ favoriteBtn.addEventListener("click", () => {
 
 
 // ==========================================
-// 15. SEARCH NOTES
+// 16. SEARCH NOTES
 // ==========================================
 
 searchInput.addEventListener("input", displayNotes);
 
 
 // ==========================================
-// 16. FILTER NOTES
+// 17. FILTER NOTES
 // ==========================================
 
 filterButtons.forEach(button => {
@@ -707,7 +779,7 @@ filterButtons.forEach(button => {
 
 
 // ==========================================
-// 17. CATEGORY NAVIGATION
+// 18. CATEGORY NAVIGATION
 // ==========================================
 
 categoryLinks.forEach(link => {
@@ -730,18 +802,18 @@ categoryLinks.forEach(link => {
 
 
 // ==========================================
-// 18. COUNT WORDS AND CHARACTERS
+// 19. COUNT WORDS AND CHARACTERS
 // ==========================================
 
 function updateWordCount() {
 
-    const text = noteContent.value.trim();
+    const text = noteContent.innerText.trim();
 
     const words = text === ""
         ? 0
         : text.split(/\s+/).length;
 
-    const characters = noteContent.value.length;
+    const characters = text.length;
 
 
     wordCount.textContent =
@@ -751,67 +823,35 @@ function updateWordCount() {
 
 
 // ==========================================
-// 19. TEXT FORMATTING
+// 20. TEXT FORMATTING
 // ==========================================
 
-const formatButtons = document.querySelectorAll(
-    ".formatting-toolbar button"
-);
+// Keep the text selection when clicking a toolbar button.
+
+formatButtons.forEach(button => {
+
+    button.addEventListener("mousedown", event => {
+        event.preventDefault();
+    });
+
+});
 
 
-formatButtons.forEach((button, index) => {
+formatButtons.forEach(button => {
 
     button.addEventListener("click", () => {
 
-        const start = noteContent.selectionStart;
+        const command = button.dataset.command;
 
-        const end = noteContent.selectionEnd;
-
-        const selectedText = noteContent.value.substring(
-            start,
-            end
-        );
-
-
-        let formattedText = selectedText;
-
-
-        if (index === 0) {
-
-            formattedText = `**${selectedText}**`;
-
-        }
-
-        else if (index === 1) {
-
-            formattedText = `*${selectedText}*`;
-
-        }
-
-        else if (index === 2) {
-
-            formattedText = `_${selectedText}_`;
-
-        }
-
-        else if (index === 3) {
-
-            formattedText = `• ${selectedText}`;
-
-        }
-
-
-        noteContent.setRangeText(
-            formattedText,
-            start,
-            end,
-            "select"
-        );
-
+        if (!command) return;
 
         noteContent.focus();
 
+        document.execCommand(command, false, null);
+
         updateNote();
+
+        updateWordCount();
 
     });
 
@@ -819,7 +859,7 @@ formatButtons.forEach((button, index) => {
 
 
 // ==========================================
-// 20. START THE APPLICATION
+// 21. START THE APPLICATION
 // ==========================================
 
 displayNotes();
