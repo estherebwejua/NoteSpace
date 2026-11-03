@@ -1,0 +1,237 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NoteSpace | Your Personal Notepad</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <div class="app-container">
+
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+
+            <div class="logo">
+                <h2>NoteSpace<span>.</span></h2>
+            </div>
+
+            <button class="new-note-btn" id="newNoteBtn">
+                + New Note
+            </button>
+
+            <nav class="sidebar-nav">
+
+               
+<p class="nav-heading">WORKSPACE</p>
+
+<a href="#" class="nav-link workspace-link active" data-view="All">
+    <span>▤</span> All Notes
+</a>
+
+<a href="#" class="nav-link workspace-link" data-view="Starred">
+    <span>★</span> Favorites
+</a>
+
+<a href="#" class="nav-link workspace-link" data-view="Pinned">
+    <span>📌</span> Pinned
+</a>
+
+              <p class="nav-heading">CATEGORIES</p>
+
+<a href="#" class="nav-link category-link" data-category="Work">
+    <span>💼</span> Work
+</a>
+
+<a href="#" class="nav-link category-link" data-category="Study">
+    <span>📚</span> Study
+</a>
+
+<a href="#" class="nav-link category-link" data-category="Ideas">
+    <span>💡</span> Ideas
+</a>
+
+<a href="#" class="nav-link category-link" data-category="Personal">
+    <span>👤</span> Personal
+</a>
+
+            </nav>
+
+            <div class="sidebar-bottom">
+                <a href="#" class="nav-link" id="settingsBtn">
+    ⚙ Settings
+</a>
+            </div>
+
+        </aside>
+
+
+        <!-- NOTES PANEL -->
+        <section class="notes-panel">
+
+            <div class="notes-header">
+                <div>
+                    <h2>My Notes</h2>
+                    <p>Keep your thoughts organized.</p>
+                </div>
+
+                <button class="menu-btn">⋮</button>
+            </div>
+
+            <div class="search-box">
+                <input
+                    type="text"
+                    id="searchInput"
+                    placeholder="Search your notes..."
+                >
+            </div>
+
+            <div class="notes-filter">
+                <button class="filter-btn active">All</button>
+                <button class="filter-btn">Recent</button>
+                <button class="filter-btn">Starred</button>
+            </div>
+
+            <div class="notes-list" id="notesList">
+
+                <div class="note-card active">
+                    <h3>Welcome to NoteSpace</h3>
+                    <p>Your thoughts deserve a beautiful space...</p>
+                    <small>Just now</small>
+                </div>
+
+                <div class="note-card">
+                    <h3>My Daily Goals</h3>
+                    <p>Things I want to accomplish today...</p>
+                    <small>Yesterday</small>
+                </div>
+
+                <div class="note-card">
+                    <h3>Project Ideas</h3>
+                    <p>Some interesting ideas for future projects...</p>
+                    <small>Monday</small>
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- EDITOR PANEL -->
+        <main class="editor-panel">
+
+            <div class="editor-toolbar">
+
+                <div class="editor-info">
+                    <span id="saveStatus">All changes saved</span>
+                </div>
+
+                <div class="editor-actions">
+                    <button id="pinBtn" title="Pin note">📌</button>
+                    <button id="favoriteBtn" title="Favorite note">☆</button>
+                    <button id="deleteBtn" title="Delete note">🗑</button>
+                </div>
+
+            </div>
+
+
+            <div class="editor-content">
+
+                <input
+                    type="text"
+                    id="noteTitle"
+                    class="note-title"
+                    placeholder="Untitled Note"
+                >
+
+                <div class="editor-meta">
+                    <span id="noteDate">Today</span>
+                    <span id="wordCount">0 words</span>
+                </div>
+                <div class="category-selector">
+
+    <label for="noteCategory">Category:</label>
+
+    <select id="noteCategory">
+        <option value="Personal">Personal</option>
+        <option value="Work">Work</option>
+        <option value="Study">Study</option>
+        <option value="Ideas">Ideas</option>
+    </select>
+
+</div>
+
+                <div class="formatting-toolbar">
+                    <button title="Bold"><b>B</b></button>
+                    <button title="Italic"><i>I</i></button>
+                    <button title="Underline"><u>U</u></button>
+                    <button title="Bullet list">☷</button>
+                </div>
+
+                <textarea
+                    id="noteContent"
+                    class="note-content"
+                    placeholder="Start writing your thoughts here..."
+                ></textarea>
+
+            </div>
+
+        </main>
+        <!-- SETTINGS PAGE -->
+<section class="settings-page" id="settingsPage">
+
+    <div class="settings-header">
+        <h1>Settings</h1>
+        <p>Customize your NoteSpace experience.</p>
+    </div>
+
+    <div class="settings-section">
+        <h2>Appearance</h2>
+        <p>Choose how NoteSpace looks on your screen.</p>
+
+        <div class="setting-option">
+            <div>
+                <h3>Theme</h3>
+                <p>Switch between light and dark mode.</p>
+            </div>
+
+            <select id="themeSelect">
+                <option value="light">Light Mode</option>
+                <option value="dark">Dark Mode</option>
+            </select>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h2>Storage</h2>
+        <p>Keep track of your saved notes.</p>
+
+        <div class="setting-option">
+            <div>
+                <h3>Total Notes</h3>
+                <p>Your currently saved notes.</p>
+            </div>
+
+            <strong id="totalNotes">0</strong>
+        </div>
+    </div>
+
+    <div class="settings-section">
+        <h2>About NoteSpace</h2>
+        <p>Your personal space for thoughts, ideas, and creativity.</p>
+        <small>Version 1.0.0</small>
+    </div>
+
+</section>
+
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+</html>
